@@ -1,0 +1,4 @@
+{
+    "GCLOUD_PROJECT": "marinaproject",
+    "DATA_BACKEND": "datastore"
+}
