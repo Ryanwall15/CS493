@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 
+app.enable('trust proxy'); 
 app.use('/', require('./index'));
 
 // Listen to the App Engine-specified port, or 8080 otherwise

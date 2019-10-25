@@ -1,0 +1,1437 @@
+{
+	"info": {
+		"_postman_id": "61ce9b9c-120b-4a8c-ac98-399cf3940b6a",
+		"name": "hw4-intermediate",
+		"description": "This collection tests the API specification given for Assignment 3.\nIn order to run this collection, you need an environment which has the following 3 environment variables pre-defined:\n\napp_url\n- Set this to your app. E.g., when running locally set it to http://localhost:8080. When running the app on GCP. set it to https://myapp.appsport.com\n\ninvalid_boat_id\n- Set it to a value that's not an ID of any boat in your project. I have set it to 1 and that should work for you as well.\n- \n\ninvalid_slip_id\n- Set it to a value that's not an ID of any slip in your porject. I have set it to 1 and that should work for you as well.\n\nChange log:\n- Oct 15, 9:30 am. Test \"edit boat with invalid id 404\" has been modified. The request body now includes all the attributes so that this test now tests only for invalid id.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Boat Tests",
+			"item": [
+				{
+					"name": "add boat",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "4ecff411-7a3b-42dc-b33a-52116065953c",
+								"exec": [
+									"pm.environment.set(\"boat_id\", pm.response.json()[\"id\"]);",
+									"",
+									"pm.test(\"201 status code\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"",
+									"pm.test(\"content is valid\", function () {",
+									"    pm.expect(pm.response.json()[\"name\"]).to.eq(\"Odyssey\");",
+									"    pm.expect(pm.response.json()[\"type\"]).to.eq(\"Yatch\");",
+									"    pm.expect(pm.response.json()[\"length\"]).to.eq(99);",
+									"    const self_url = pm.environment.get(\"app_url\") + \"boats/\" + pm.response.json()[\"id\"];",
+									"    pm.expect(pm.response.json()[\"self\"]).to.eq(self_url);",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"Odyssey\",\r\n  \"type\": \"Yatch\",\r\n  \"length\": 99\r\n}"
+						},
+						"url": {
+							"raw": "{{app_url}}/boats",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"boats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get boat 200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "5539477a-9ff5-429b-979b-af285e94fa56",
+								"exec": [
+									"pm.test(\"200 status code\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"",
+									"pm.test(\"content is valid\", function () {",
+									"    pm.expect(pm.response.json()[\"name\"]).to.eq(\"Odyssey\");",
+									"    pm.expect(pm.response.json()[\"type\"]).to.eq(\"Yatch\");",
+									"    pm.expect(pm.response.json()[\"length\"]).to.eq(99);",
+									"    const self_url = pm.environment.get(\"app_url\") + \"/boats/\" + pm.response.json()[\"id\"];",
+									"    pm.expect(pm.response.json()[\"self\"]).to.eq(self_url);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/boats/{{boat_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"boats",
+								"{{boat_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "add boat with missing attributes 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "4ecff411-7a3b-42dc-b33a-52116065953c",
+								"exec": [
+									"pm.test(\"400 status code\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"400 error message\", function () {",
+									"     pm.expect(pm.response.json()[\"Error\"]).to.eq(\"The request object is missing at least one of the required attributes\");",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"Odyssey\",\r\n  \"type\": \"Yatch\"\r\n}"
+						},
+						"url": {
+							"raw": "{{app_url}}/boats",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"boats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get boat wiht invalid id 404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "5539477a-9ff5-429b-979b-af285e94fa56",
+								"exec": [
+									"pm.test(\"404 not found\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"",
+									"pm.test(\"404 error message\", function () {",
+									"     pm.expect(pm.response.json()[\"Error\"]).to.eq(\"No boat with this boat_id exists\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/boats/{{invalid_boat_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"boats",
+								"{{invalid_boat_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get all boats 200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "00b996e8-52af-4a08-8ce2-22097177a90f",
+								"exec": [
+									"pm.test(\"200 status code\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"",
+									"pm.test(\"At least one boat exists\", function(){",
+									"   pm.expect(Object.keys(pm.response.json()).length).to.be.at.least(1);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/boats",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"boats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "edit boat 200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "c7a74f9c-2581-40ca-9996-ba107147f762",
+								"exec": [
+									"pm.test(\"200 status code\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"content is valid\", function () {",
+									"    pm.expect(pm.response.json()[\"name\"]).to.eq(\"Odyssey II\");",
+									"    pm.expect(pm.response.json()[\"type\"]).to.eq(\"Mega Yatch\");",
+									"    pm.expect(pm.response.json()[\"length\"]).to.eq(200);",
+									"    const self_url = pm.environment.get(\"app_url\") + \"/boats/\" + pm.response.json()[\"id\"];",
+									"    pm.expect(pm.response.json()[\"self\"]).to.eq(self_url);",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"Odyssey II\",\r\n  \"type\": \"Mega Yatch\",\r\n  \"length\": 200\r\n}"
+						},
+						"url": {
+							"raw": "{{app_url}}/boats/{{boat_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"boats",
+								"{{boat_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "edit boat with missing attributes 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "c7a74f9c-2581-40ca-9996-ba107147f762",
+								"exec": [
+									"pm.test(\"400 status code\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"400 error message\", function () {",
+									"     pm.expect(pm.response.json()[\"Error\"]).to.eq(\"The request object is missing at least one of the required attributes\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"Odyssey II\",\r\n  \"length\": 200\r\n}"
+						},
+						"url": {
+							"raw": "{{app_url}}/boats/{{boat_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"boats",
+								"{{boat_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "edit boat with invalid id 404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "c7a74f9c-2581-40ca-9996-ba107147f762",
+								"exec": [
+									"pm.test(\"404 not found\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"",
+									"pm.test(\"404 error message\", function () {",
+									"     pm.expect(pm.response.json()[\"Error\"]).to.eq(\"No boat with this boat_id exists\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"Odyssey II\",\r\n   \"type\": \"Mega Yatch\",\r\n  \"length\": 200\r\n}"
+						},
+						"url": {
+							"raw": "{{app_url}}/boats/{{invalid_boat_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"boats",
+								"{{invalid_boat_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete a Boat",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "582c5d36-7874-4675-b43e-22ab4aee1803",
+								"exec": [
+									"pm.test(\"204 status code\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/boats/{{boat_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"boats",
+								"{{boat_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete a invalid boat",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "582c5d36-7874-4675-b43e-22ab4aee1803",
+								"exec": [
+									"pm.test(\"404 status code\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"",
+									"pm.test(\"400 error message\", function () {",
+									"     pm.expect(pm.response.json()[\"Error\"]).to.eq(\"No boat with this boat_id exists\");",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/boats/{{invalid_boat_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"boats",
+								"{{invalid_boat_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Cargo Tests",
+			"item": [
+				{
+					"name": "add slip 201",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "54871a0f-16d9-421a-965f-6881e5cf0750",
+								"exec": [
+									"pm.environment.set(\"slip_id\", pm.response.json()[\"id\"]);",
+									"",
+									"pm.test(\"201 status code\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"",
+									"pm.test(\"content is valid\", function () {",
+									"    pm.expect(pm.response.json()[\"number\"]).to.eq(1);",
+									"    pm.expect(pm.response.json()[\"current_boat\"]).to.eq(null);",
+									"    const self_url = pm.environment.get(\"app_url\") + \"/slips/\" + pm.response.json()[\"id\"];",
+									"    pm.expect(pm.response.json()[\"self\"]).to.eq(self_url);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"number\": 1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{app_url}}/slips",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"slips"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "add slip with missing attribute 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "4ecff411-7a3b-42dc-b33a-52116065953c",
+								"exec": [
+									"pm.test(\"400 status code\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"400 error message\", function () {",
+									"     pm.expect(pm.response.json()[\"Error\"]).to.eq(\"The request object is missing the required number\");",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"Odyssey\",\r\n  \"type\": \"Yatch\"\r\n}"
+						},
+						"url": {
+							"raw": "{{app_url}}/slips",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"slips"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get slip 200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "5539477a-9ff5-429b-979b-af285e94fa56",
+								"exec": [
+									"pm.test(\"200 status code\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"",
+									"pm.test(\"content is valid\", function () {",
+									"    pm.expect(pm.response.json()[\"number\"]).to.eq(1);",
+									"     pm.expect(pm.response.json()[\"current_boat\"]).to.eq(null);",
+									"    const self_url = pm.environment.get(\"app_url\") + \"/slips/\" + pm.response.json()[\"id\"];",
+									"    pm.expect(pm.response.json()[\"self\"]).to.eq(self_url);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/slips/{{slip_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"slips",
+								"{{slip_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get slip with invalid id 404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "5539477a-9ff5-429b-979b-af285e94fa56",
+								"exec": [
+									"pm.test(\"404 not found\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"",
+									"pm.test(\"404 error message\", function () {",
+									"     pm.expect(pm.response.json()[\"Error\"]).to.eq(\"No slip with this slip_id exists\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/slips/{{invalid_slip_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"slips",
+								"{{invalid_slip_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get all slips 200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "00b996e8-52af-4a08-8ce2-22097177a90f",
+								"exec": [
+									"pm.test(\"200 status code\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"",
+									"pm.test(\"At least one boat exists\", function(){",
+									"   pm.expect(Object.keys(pm.response.json()).length).to.be.at.least(1);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/slips",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"slips"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "boat  arrives at slip 204",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "00b996e8-52af-4a08-8ce2-22097177a90f",
+								"exec": [
+									"pm.test(\"204 status code\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/slips/{{slip_id}}/{{boat_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"slips",
+								"{{slip_id}}",
+								"{{boat_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "boat arrives at non-empty slip 403",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "00b996e8-52af-4a08-8ce2-22097177a90f",
+								"exec": [
+									"pm.test(\"403 status code\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});",
+									"",
+									"",
+									"pm.test(\"400 error message\", function () {",
+									"     pm.expect(pm.response.json()[\"Error\"]).to.eq(\"The slip is not empty\");",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/slips/{{slip_id}}/{{boat_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"slips",
+								"{{slip_id}}",
+								"{{boat_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "invalid boat id arrives at slip 404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "00b996e8-52af-4a08-8ce2-22097177a90f",
+								"exec": [
+									"pm.test(\"404 status code\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"",
+									"pm.test(\"400 error message\", function () {",
+									"     pm.expect(pm.response.json()[\"Error\"]).to.eq(\"The specified boat and/or slip don’t exist\");",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/slips/{{slip_id}}/{{invalid_boat_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"slips",
+								"{{slip_id}}",
+								"{{invalid_boat_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "boat arrives at invalid slip 404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "00b996e8-52af-4a08-8ce2-22097177a90f",
+								"exec": [
+									"pm.test(\"404 status code\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"",
+									"pm.test(\"400 error message\", function () {",
+									"     pm.expect(pm.response.json()[\"Error\"]).to.eq(\"The specified boat and/or slip don’t exist\");",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/slips/{{invalid_slip_id}}/{{boat_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"slips",
+								"{{invalid_slip_id}}",
+								"{{boat_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "invalid boat arrives at invalid slip 404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "00b996e8-52af-4a08-8ce2-22097177a90f",
+								"exec": [
+									"pm.test(\"404 status code\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"",
+									"pm.test(\"400 error message\", function () {",
+									"     pm.expect(pm.response.json()[\"Error\"]).to.eq(\"The specified boat and/or slip don’t exist\");",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/slips/{{invalid_slip_id}}/{{invalid_boat_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"slips",
+								"{{invalid_slip_id}}",
+								"{{invalid_boat_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get slip with a current boat 200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "5539477a-9ff5-429b-979b-af285e94fa56",
+								"exec": [
+									"pm.test(\"200 status code\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"",
+									"pm.test(\"content is valid\", function () {",
+									"    pm.expect(pm.response.json()[\"number\"]).to.eq(1);",
+									"     pm.expect(pm.response.json()[\"current_boat\"]).to.eq(pm.environment.get(\"boat_id\"));",
+									"    const self_url = pm.environment.get(\"app_url\") + \"/slips/\" + pm.response.json()[\"id\"];",
+									"    pm.expect(pm.response.json()[\"self\"]).to.eq(self_url);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/slips/{{slip_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"slips",
+								"{{slip_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "boat departs slip 204",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "00b996e8-52af-4a08-8ce2-22097177a90f",
+								"exec": [
+									"pm.test(\"204 status code\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/slips/{{slip_id}}/{{boat_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"slips",
+								"{{slip_id}}",
+								"{{boat_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get slip with boat departed 200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "5539477a-9ff5-429b-979b-af285e94fa56",
+								"exec": [
+									"pm.test(\"200 status code\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"",
+									"pm.test(\"content is valid\", function () {",
+									"    pm.expect(pm.response.json()[\"number\"]).to.eq(1);",
+									"     pm.expect(pm.response.json()[\"current_boat\"]).to.eq(null);",
+									"    const self_url = pm.environment.get(\"app_url\") + \"/slips/\" + pm.response.json()[\"id\"];",
+									"    pm.expect(pm.response.json()[\"self\"]).to.eq(self_url);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/slips/{{slip_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"slips",
+								"{{slip_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "add another boat 201",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "4ecff411-7a3b-42dc-b33a-52116065953c",
+								"exec": [
+									"pm.environment.set(\"boat_id_1\", pm.response.json()[\"id\"]);",
+									"",
+									"pm.test(\"201 status code\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"",
+									"pm.test(\"content is valid\", function () {",
+									"    pm.expect(pm.response.json()[\"name\"]).to.eq(\"Mega Boat\");",
+									"    pm.expect(pm.response.json()[\"type\"]).to.eq(\"Yatch\");",
+									"    pm.expect(pm.response.json()[\"length\"]).to.eq(200);",
+									"    const self_url = pm.environment.get(\"app_url\") + \"/boats/\" + pm.response.json()[\"id\"];",
+									"    pm.expect(pm.response.json()[\"self\"]).to.eq(self_url);",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"Mega Boat\",\r\n  \"type\": \"Yatch\",\r\n  \"length\": 200\r\n}"
+						},
+						"url": {
+							"raw": "{{app_url}}/boats",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"boats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "boat_id_1 arrives at slip 204",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "00b996e8-52af-4a08-8ce2-22097177a90f",
+								"exec": [
+									"pm.test(\"204 status code\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/slips/{{slip_id}}/{{boat_id_1}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"slips",
+								"{{slip_id}}",
+								"{{boat_id_1}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "boat not at slip tries to depart 404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "00b996e8-52af-4a08-8ce2-22097177a90f",
+								"exec": [
+									"pm.test(\"404 status code\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"",
+									"pm.test(\"400 error message\", function () {",
+									"     pm.expect(pm.response.json()[\"Error\"]).to.eq(\"No boat with this boat_id is at the slip with this slip_id\");",
+									"});",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/slips/{{slip_id}}/{{boat_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"slips",
+								"{{slip_id}}",
+								"{{boat_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "invalid boat tries to depart slip 404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "00b996e8-52af-4a08-8ce2-22097177a90f",
+								"exec": [
+									"pm.test(\"404 status code\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"",
+									"pm.test(\"400 error message\", function () {",
+									"     pm.expect(pm.response.json()[\"Error\"]).to.eq(\"No boat with this boat_id is at the slip with this slip_id\");",
+									"});",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/slips/{{slip_id}}/{{invalid_boat_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"slips",
+								"{{slip_id}}",
+								"{{invalid_boat_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "boat tries to depart invalid slip 404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "00b996e8-52af-4a08-8ce2-22097177a90f",
+								"exec": [
+									"pm.test(\"404 status code\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"",
+									"pm.test(\"400 error message\", function () {",
+									"     pm.expect(pm.response.json()[\"Error\"]).to.eq(\"No boat with this boat_id is at the slip with this slip_id\");",
+									"});",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/slips/{{invalid_slip_id}}/{{invalid_boat_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"slips",
+								"{{invalid_slip_id}}",
+								"{{invalid_boat_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete boat_id_1 204",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "2cac53f7-2029-4485-a74e-8660fec6b45b",
+								"exec": [
+									"pm.test(\"204 no content\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/boats/{{boat_id_1}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"boats",
+								"{{boat_id_1}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get slip with boat_id_1 deleted 200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "5539477a-9ff5-429b-979b-af285e94fa56",
+								"exec": [
+									"pm.test(\"200 status code\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"",
+									"pm.test(\"content is valid\", function () {",
+									"    pm.expect(pm.response.json()[\"number\"]).to.eq(1);",
+									"    pm.expect(pm.response.json()[\"current_boat\"]).to.eq(null);",
+									"    const self_url = pm.environment.get(\"app_url\") + \"/slips/\" + pm.response.json()[\"id\"];",
+									"    pm.expect(pm.response.json()[\"self\"]).to.eq(self_url);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/slips/{{slip_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"slips",
+								"{{slip_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete boat 204",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "2cac53f7-2029-4485-a74e-8660fec6b45b",
+								"exec": [
+									"pm.test(\"204 no content\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/boats/{{boat_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"boats",
+								"{{boat_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete boat wiht invalid id 404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "2cac53f7-2029-4485-a74e-8660fec6b45b",
+								"exec": [
+									"pm.test(\"404 not found\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"",
+									"pm.test(\"404 error message\", function () {",
+									"     pm.expect(pm.response.json()[\"Error\"]).to.eq(\"No boat with this boat_id exists\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/boats/{{invalid_boat_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"boats",
+								"{{invalid_boat_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete slip with invalid_id 404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "2cac53f7-2029-4485-a74e-8660fec6b45b",
+								"exec": [
+									"pm.test(\"404 not found\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"",
+									"pm.test(\"404 error message\", function () {",
+									"     pm.expect(pm.response.json()[\"Error\"]).to.eq(\"No slip with this slip_id exists\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/slips/{{invalid_slip_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"slips",
+								"{{invalid_slip_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete slip 204",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "2cac53f7-2029-4485-a74e-8660fec6b45b",
+								"exec": [
+									"pm.test(\"204 no content\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{app_url}}/slips/{{slip_id}}",
+							"host": [
+								"{{app_url}}"
+							],
+							"path": [
+								"slips",
+								"{{slip_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "42aac422-9426-4c94-b0f1-5e1b9218971e",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "5e41c7b2-d777-46d4-b524-7cad7edb5875",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"protocolProfileBehavior": {}
+}
