@@ -5,9 +5,6 @@ const ds = require('./datastore');
 
 const datastore = ds.datastore;
 
-const url = "https://wallerirassignment4.appspot.com/"; 
-
-
 const BOAT = "Boat"; 
 const LOAD = "Load"; 
 
@@ -19,25 +16,20 @@ router.use(bodyParser.json());
 
 //Function to pass Postman tests 
 function stringifyExample(idValue, nameValue, typeValue, lengthValue, protocolVal, hostVal, baseVal) {
-    return '{ "id": "' + idValue + '", "name": "' + nameValue + '", "type": "' + typeValue + '", "length": ' + lengthValue + ', "self": "' + protocolVal + "://" + hostVal + baseVal + "/" + idValue + '"}';
+    return '{ "id": "' + idValue + '",\n "name": "' + nameValue + '",\n "type": "' + typeValue + '",\n "length": ' + lengthValue + ',\n "self": "' + protocolVal + "://" + hostVal + baseVal + "/" + idValue + '"\n}';
 }
 
 /*function stringifyExample1(protocolVal, hostVal){ 
     return '{ "self": "' + protocolVal  + '", ' + hostVal + '}'; 
 }*/
 
-/* ------------- Begin Lodging Model Functions ------------- */
-/*function post_lodging(name, description, price){
-    var key = datastore.key(LODGING);
-	const new_lodging = {"name": name, "description": description, "price": price};
-	return datastore.save({"key":key, "data":new_lodging}).then(() => {return key});
-}*/ 
+/* ------------- Begin Boat Model Functions ------------- */
 function post_boat(name, type, length){
     var key = datastore.key(BOAT);
 	const new_boat = {"name": name, 
     "type": type, 
     "length": length, 
-    "cargo": []
+    "loads": []
     };
 	return datastore.save({"key":key, "data":new_boat}).then(() => {return key});
 }
@@ -57,20 +49,10 @@ function get_boats(req){
 		});
 }  
 
-/* function get_boat(id){
-    const key = datastore.key([BOATS, parseInt(id,10)]);
-    return datastore.get(key); 
-}*/ 
 function get_boat(id){
     const key = datastore.key([BOAT, parseInt(id,10)]); 
     return datastore.get(key); 
 }
-/* function get_boats(){
-    var q = datastore.createQuery(BOAT); 
-    return datastore.runQuery(q).then( (entities) => {
-        return entities[0].map(fromDatastore);
-    });
-}*/ 
 
 //Get load from boats 
 function get_lodging_guests(req, id){
