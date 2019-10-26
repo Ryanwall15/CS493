@@ -1,2 +1,2 @@
-# CS493
-Cloud Application Development
+# CS493 - Cloud Application Development
+This course focuses on cloud API development. Those represent the two major components of the class: cloud based computing and API development. Cloud computing is basically computing that is done on distributed computers all over the world. Web API development involved creating applications that internet connected devices can interact with to accomplish certain tasks. The combination will mean that we are creating applications on cloud based computers which we can interact with over the internet.
