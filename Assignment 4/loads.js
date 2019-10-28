@@ -43,19 +43,22 @@ function get_loads(req){
 		});
 }
 
-function get_boat(id){
+function get_load(id){
     const key = datastore.key([LOAD, parseInt(id,10)]); 
     return datastore.get(key); 
 }
 
-function put_guest(id, name){
-    const key = datastore.key([GUEST, parseInt(id,10)]);
-    const guest = {"name": name};
-    return datastore.save({"key":key, "data":guest});
+function put_load(id, weight, content, delivery_date) {
+    const key = datastore.key([LOAD, parseInt(id,10)]);
+    const load  = {"weight": weight,
+    "content": content, 
+    "delivery_date": delivery_date
+    };
+    return datastore.update({"key":key, "data":load}).then(() => {return key});
 }
 
-function delete_guest(id){
-    const key = datastore.key([GUEST, parseInt(id,10)]);
+function delete_load(id){
+    const key = datastore.key([LOAD, parseInt(id,10)]);
     return datastore.delete(key);
 }
 
@@ -70,11 +73,11 @@ router.get('/', function(req, res){
     });
 });
 
-router.get('/:id', function(req, res) {
-    const load = get_load(req.params.id)
+router.get('/:load_id', function(req, res) {
+    const load = get_load(req.params.load_id)
     .then( (load) => {
         if (load[0] == null) {
-            res.status(404).json({"Error": "No boat with this boat_id exists"});
+            res.status(404).json({"Error": "No load with this load_id exists"});
         }
         else {
             res.status(200).json(load); 
@@ -87,19 +90,30 @@ router.post('/', function(req, res){
     if (req.body.weight == null || req.body.content == null || req.body.delivery_date == null) {
         res.status(400).send('{"Error": "The request object is missing at least one of the required attributes"}')
     }
+    else {
     post_load(req.body.weight, req.body.content, req.body.delivery_date)
     .then( key => {
         res.status(201).send(stringifyExample(key.id, req.body.weight, req.body.content, req.body.delivery_date, req.protocol, req.get("host"), req.baseUrl));
         });
+    }
 });
 
-router.put('/:id', function(req, res){
-    put_guest(req.params.id, req.body.name)
-    .then(res.status(200).end());
+router.put('/:load_id', function(req,res) {
+    const load = get_load(req.params.load_id)
+    .then( (load) => {
+        if (load[0] == null) {
+            res.status(404).json({"Error": "No boat with this boat_id exists"});
+        } else if (req.body.weight == null || req.body.content == null || req.body.delivery_date == null) {
+           res.status(400).send('{"Error": "The request object is missing at least one of the required attributes"}') 
+        } else {
+            put_load(req.params.load_id, req.body.weight, req.body.content, req.body.delivery_date)
+            res.status(200).json(load); 
+        }
+    });
 });
 
-router.delete('/:id', function(req, res){
-    delete_guest(req.params.id).then(res.status(200).end())
+router.delete('/:load_id', function(req, res){
+    delete_load(req.params.load_id).then(res.status(200).end())
 });
 
 /* ------------- End Load Controller Functions ------------- */

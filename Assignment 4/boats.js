@@ -83,6 +83,7 @@ function delete_boat(id){
     return datastore.delete(key);
 }
 
+//Also implement this for putting loads on a boat 
 function put_reservation(lid, gid){
     const l_key = datastore.key([LODGING, parseInt(lid,10)]);
     return datastore.get(l_key)
@@ -107,8 +108,8 @@ router.get('/', function(req, res){
     });
 });
 
-router.get('/:id', function(req, res) {
-    const boat = get_boat(req.params.id)
+router.get('/:boat_id', function(req, res) {
+    const boat = get_boat(req.params.boat_id)
     .then( (boat) => {
         if (boat[0] == null) {
             res.status(404).json({"Error": "No boat with this boat_id exists"});
@@ -131,27 +132,30 @@ router.post('/', function(req, res){
     if (req.body.name == null || req.body.type == null || req.body.length == null) {
         res.status(400).send('{"Error": "The request object is missing at least one of the required attributes"}')
     }
-    post_boat(req.body.name, req.body.type, req.body.length)
-    .then( key => {
+    else {
+        post_boat(req.body.name, req.body.type, req.body.length)
+        .then( key => {
             res.status(201).send(stringifyExample(key.id, req.body.name, req.body.type, req.body.length, req.protocol, req.get("host"), req.baseUrl));
             //console.log(stringifyExample(key.id, req.body.name, req.body.type, req.body.length, req.protocol, req.get("host"), req.baseUrl)); 
         })
+    }
 });
 
-router.put('/:id', function(req,res) {
-    const boat = get_boat(req.params.id)
+router.put('/:boat_id', function(req,res) {
+    const boat = get_boat(req.params.boat_id)
     .then( (boat) => {
         if (boat[0] == null) {
             res.status(404).json({"Error": "No boat with this boat_id exists"});
         } else if (req.body.name == null || req.body.type == null || req.body.length == null) {
            res.status(400).send('{"Error": "The request object is missing at least one of the required attributes"}') 
         } else {
-            put_boat(req.params.id, req.body.name, req.body.type, req.body.length)
+            put_boat(req.params.boat_id, req.body.name, req.body.type, req.body.length)
             res.status(200).json(boat); 
         }
     });
 }); 
 
+//Implement this function with putting loads on the boat 
 router.put('/:lid/guests/:gid', function(req, res){
     put_reservation(req.params.lid, req.params.gid)
     .then(res.status(200).end());
@@ -159,8 +163,8 @@ router.put('/:lid/guests/:gid', function(req, res){
 
 
 //When we delete a boat we need to unload the load on the boat 
-router.delete('/:id', function(req, res){
-    const boat = get_boat(req.params.id)
+router.delete('/:boat_id', function(req, res){
+    const boat = get_boat(req.params.boat_id)
 	.then( (boat) => {
         if (boat[0] == null) {
             res.status(404).json({"Error": "No boat with this boat_id exists"});
