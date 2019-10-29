@@ -80,7 +80,7 @@ router.get('/:load_id', function(req, res) {
             res.status(404).json({"Error": "No load with this load_id exists"});
         }
         else {
-            res.status(200).json(load); 
+            res.status(200).type('json').send(stringifyExample(req.params.load_id, load[0].weight, load[0].content, load[0].delivery_date, req.protocol, req.get("host"), req.baseUrl));
         }
     })
 });
@@ -107,7 +107,7 @@ router.put('/:load_id', function(req,res) {
            res.status(400).send('{"Error": "The request object is missing at least one of the required attributes"}') 
         } else {
             put_load(req.params.load_id, req.body.weight, req.body.content, req.body.delivery_date)
-            res.status(200).json(load); 
+            res.status(200).type('json').send(stringifyExample(req.params.load_id, load[0].weight, load[0].content, load[0].delivery_date, req.protocol, req.get("host"), req.baseUrl));
         }
     });
 });

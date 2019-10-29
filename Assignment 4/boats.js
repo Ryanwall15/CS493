@@ -55,19 +55,19 @@ function get_boat(id){
 }
 
 //Get load from boats 
-function get_lodging_guests(req, id){
-    const key = datastore.key([LODGING, parseInt(id,10)]);
+function get_boats_loads(req, id){
+    const key = datastore.key([BOAT, parseInt(id,10)]);
     return datastore.get(key)
-    .then( (lodgings) => {
-        const lodging = lodgings[0];
-        const guest_keys = lodging.guests.map( (g_id) => {
-            return datastore.key([GUEST, parseInt(g_id,10)]);
+    .then( (boats) => {
+        const boat = boats[0];
+        const load_keys = boat.loads.map( (g_id) => {
+            return datastore.key([LOAD, parseInt(g_id,10)]);
         });
-        return datastore.get(guest_keys);
+        return datastore.get(load_keys);
     })
-    .then((guests) => {
-        guests = guests[0].map(ds.fromDatastore);
-        return guests;
+    .then((loads) => {
+        loads = loads[0].map(ds.fromDatastore);
+        return loads;
     });
 }
 
@@ -84,15 +84,15 @@ function delete_boat(id){
 }
 
 //Also implement this for putting loads on a boat 
-function put_reservation(lid, gid){
-    const l_key = datastore.key([LODGING, parseInt(lid,10)]);
-    return datastore.get(l_key)
-    .then( (lodging) => {
-        if( typeof(lodging[0].guests) === 'undefined'){
-            lodging[0].guests = [];
+function put_reservation(bid, cid){
+    const b_key = datastore.key([BOAT, parseInt(bid,10)]);
+    return datastore.get(b_key)
+    .then( (boat) => {
+        if( typeof(boat[0].loads) === 'undefined'){
+            boat[0].loads = [];
         }
-        lodging[0].guests.push(gid);
-        return datastore.save({"key":l_key, "data":lodging[0]});
+        boat[0].loads.push(cid);
+        return datastore.save({"key":b_key, "data":boat[0]});
     });
 
 }
@@ -108,6 +108,7 @@ router.get('/', function(req, res){
     });
 });
 
+//stringifyExample(idValue, nameValue, typeValue, lengthValue, protocolVal, hostVal, baseVal)
 router.get('/:boat_id', function(req, res) {
     const boat = get_boat(req.params.boat_id)
     .then( (boat) => {
@@ -115,16 +116,18 @@ router.get('/:boat_id', function(req, res) {
             res.status(404).json({"Error": "No boat with this boat_id exists"});
         }
         else {
-            res.status(200).json(boat); 
+            res.status(200).type('json').send(stringifyExample(req.params.boat_id, boat[0].name, boat[0].type, boat[0].length, req.protocol, req.get("host"), req.baseUrl));
+            //res.status(200).json(boat);  
         }
     })
 });
 
 //Function to get cargo from boats
-router.get('/:id/guests', function(req, res){
-    const lodgings = get_lodging_guests(req, req.params.id)
-	.then( (lodgings) => {
-        res.status(200).json(lodgings);
+//Still need to get this to work 
+router.get('/:boat_id/loads', function(req, res){
+    const boats = get_boats_loads(req, req.params.boat_id)
+	.then( (boats) => {
+        res.status(200).json(boats);
     });
 });
 
@@ -156,8 +159,8 @@ router.put('/:boat_id', function(req,res) {
 }); 
 
 //Implement this function with putting loads on the boat 
-router.put('/:lid/guests/:gid', function(req, res){
-    put_reservation(req.params.lid, req.params.gid)
+router.put('/:bid/loads/:cid', function(req, res){
+    put_reservation(req.params.bid, req.params.cid)
     .then(res.status(200).end());
 });
 
