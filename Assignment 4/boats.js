@@ -71,6 +71,24 @@ function get_boats_loads(req, id){
     });
 }
 
+/*
+//Trying to get Carrier properly assigned 
+function get_loads_carrier(req, id){
+    const key = datastore.key([LOAD, parseInt(id,10)]);
+    return datastore.get(key)
+    .then( (loads) => {
+        const load = loads[0];
+        const boat_keys = load.carrier.map( (b_id) => {
+            return datastore.key([LOAD, parseInt(b_id,10)]);
+        });
+        return datastore.get(boat_keys);
+    })
+    .then((boats) => {
+        boats = boats[0].map(ds.fromDatastore);
+        return boats;
+    });
+} */ 
+
 //Update boat function
 function put_boat(id, name, type, length){
     const key = datastore.key([BOAT, parseInt(id,10)]);
@@ -93,6 +111,17 @@ function put_reservation(bid, cid){
         }
         boat[0].loads.push(cid);
         return datastore.save({"key":b_key, "data":boat[0]});
+    });
+    //Trying to assign boat id to carrier property
+    //Following same model as assigning load to boat property
+    const c_key = datstore.key([LOAD, parseInt(cid,10)]); 
+    return datastore.get(c_key)
+    .then( (load) => {
+        if( typeof(load[0].carrier) === 'undefined'){
+            load[0].carrier = []; 
+        }
+        load[0].carrier.push(bid);
+        return datastore.save({"key":c_key, "data":load[0]}); 
     });
 
 }
@@ -153,15 +182,20 @@ router.put('/:boat_id', function(req,res) {
            res.status(400).send('{"Error": "The request object is missing at least one of the required attributes"}') 
         } else {
             put_boat(req.params.boat_id, req.body.name, req.body.type, req.body.length)
-            res.status(200).json(boat); 
+            res.status(200).type('json').send(stringifyExample(req.params.boat_id, boat[0].name, boat[0].type, boat[0].length, req.protocol, req.get("host"), req.baseUrl));
         }
     });
 }); 
 
 //Implement this function with putting loads on the boat 
 router.put('/:bid/loads/:cid', function(req, res){
+    if (req.params.bid == null || req.params.cid == null) {
+        res.status(404).send('{"Error": No boat with this boat_id exists, and/or no load with this load_id exits."}')
+    }
+    else {
     put_reservation(req.params.bid, req.params.cid)
     .then(res.status(200).end());
+    }
 });
 
 
@@ -173,7 +207,7 @@ router.delete('/:boat_id', function(req, res){
             res.status(404).json({"Error": "No boat with this boat_id exists"});
         }
         else {
-            delete_boat(req.params.id).then(res.status(204).end());  
+            delete_boat(req.params.boat_id).then(res.status(204).end());  
         }    
     });
 });

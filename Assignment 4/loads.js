@@ -14,6 +14,10 @@ router.use(bodyParser.json());
 function stringifyExample(idValue, weightValue, contentValue, deliveryValue, protocolVal, hostVal, baseVal) {
     return '{ "id": "' + idValue + '",\n "weight": "' + weightValue + '",\n "content": "' + contentValue + '",\n "delivery date": "' + deliveryValue + '",\n "self": "' + protocolVal + "://" + hostVal + baseVal + "/" + idValue + '"\n}';
 }
+
+function stringifyURL(protocolVal, hostVal, baseVal){
+    return '{ "self": "' + protocolVal + "://" + hostVal + baseVal + "/" + idValue + '"\n}';
+}
 /* ------------- Begin Load Model Functions ------------- */
 function post_load(weight, content, delivery_date){
     var key = datastore.key(LOAD);
@@ -47,6 +51,7 @@ function get_load(id){
     const key = datastore.key([LOAD, parseInt(id,10)]); 
     return datastore.get(key); 
 }
+
 
 function put_load(id, weight, content, delivery_date) {
     const key = datastore.key([LOAD, parseInt(id,10)]);
@@ -102,7 +107,7 @@ router.put('/:load_id', function(req,res) {
     const load = get_load(req.params.load_id)
     .then( (load) => {
         if (load[0] == null) {
-            res.status(404).json({"Error": "No boat with this boat_id exists"});
+            res.status(404).json({"Error": "No load with this load_id exists"});
         } else if (req.body.weight == null || req.body.content == null || req.body.delivery_date == null) {
            res.status(400).send('{"Error": "The request object is missing at least one of the required attributes"}') 
         } else {
@@ -113,9 +118,16 @@ router.put('/:load_id', function(req,res) {
 });
 
 router.delete('/:load_id', function(req, res){
-    delete_load(req.params.load_id).then(res.status(200).end())
+    const load = get_load(req.params.load_id)
+	.then( (load) => {
+        if (load[0] == null) {
+            res.status(404).json({"Error": "No load with this load_id exists"});
+        }
+        else {
+            delete_load(req.params.load_id).then(res.status(204).end());  
+        }    
+    });
 });
-
 /* ------------- End Load Controller Functions ------------- */
 
 module.exports = router;
