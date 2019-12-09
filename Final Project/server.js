@@ -1,7 +1,10 @@
 const express = require('express');
 const app = express();
 
-app.enable('trust proxy'); 
+app.enable('trust proxy');
+//var exphbs = require('express-handlebars');
+//app.engine('handlebars', exphbs({ defaultLayout: 'main' })); 
+//app.set('view engine', 'handlebars'); 
 app.use('/', require('./index'));
 
 // Listen to the App Engine-specified port, or 8080 otherwise

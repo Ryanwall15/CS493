@@ -6,9 +6,33 @@ const ds = require('./datastore');
 const datastore = ds.datastore;
 
 const BOATS = "Boats"; 
-const CARGO = "Cargo"; 
+const CARGO = "Cargo";
+const USERS = "Users";
+
+//Using express handlebars to render pages
+//Installed package by running npm install express-handlebars --save 
+//https://github.com/ericf/express-handlebars
+//var exphbs = require('express-handlebars');
+//app.engine('handlebars', exphbs({ defaultLayout: 'main' })); 
+//app.set('view engine', 'handlebars'); 
 
 router.use(bodyParser.json());
+
+const jwt = require('express-jwt');
+const jwksRsa = require('jwks-rsa');
+
+const checkJwt = jwt({
+    secret: jwksRsa.expressJwtSecret({
+      cache: true,
+      rateLimit: true,
+      jwksRequestsPerMinute: 5,
+      jwksUri: 'https://www.googleapis.com/oauth2/v3/certs'
+    }),
+  
+    // Validate the audience and the issuer.
+    issuer: `https://accounts.google.com`,
+    algorithms: ['RS256']
+}); 
 
 //Function to pass Postman tests 
 function stringifyExample(idValue, nameValue, typeValue, lengthValue, ownerValue, protocolVal, hostVal, baseVal) {
@@ -132,6 +156,7 @@ function put_cargoCarrier(bid, cid) {
         return datastore.save({"key":c_key, "data":cargo[0]}); 
     });
 }
+
 /* ------------- End Boat Model Functions ------------- */
 
 /* ------------- Begin Boat Controller Functions ------------- */ 
@@ -166,7 +191,7 @@ router.get('/:boat_id/cargo', function(req, res){
     });
 });  
 
-router.post('/', function(req, res){
+/* router.post('/', function(req, res){
     if(req.get('content-type') !== 'application/json'){
         res.status(406).send('Server only accepts application/json data.')
     }
@@ -177,6 +202,23 @@ router.post('/', function(req, res){
                 //boat.self = req.protocol + "://" + req.get('host') + req.baseUrl + '/' + key.id;
                 res.status(201).send(stringifyExample(key.id, req.body.name, req.body.type, req.body.length, req.body.owner, req.protocol, req.get("host"), req.baseUrl));
             });
+    }  
+}); */ 
+router.post('/', checkJwt, function(req, res){
+    if(req.get('content-type') !== 'application/json'){
+        res.status(415).send('Server only accepts application/json data.')
+    }
+    else if(!checkJwt) {
+        res.status(401).end(); 
+    }
+    else {
+    console.log(req.user.sub);     
+    post_boat(req.body.name, req.body.type, req.body.length, req.user.sub)
+    //req.user.name
+    .then( key => {
+        //res.location(req.protocol + "://" + req.get('host') + req.baseUrl + '/' + key.id);
+        res.status(201).send(stringifyExample(key.id, req.body.name, req.body.type, req.body.length, req.user.sub, req.protocol, req.get("host"), req.baseUrl));
+    } );
     }  
 });
 
