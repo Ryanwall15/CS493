@@ -34,6 +34,23 @@ const checkJwt = jwt({
     algorithms: ['RS256']
 }); 
 
+//Function to check if we were not passed in a name, type, length
+//From the URL: https://stackoverflow.com/questions/47502236/check-many-req-body-values-nodejs-api 
+// checks to see if all props in the list are available and non-null
+// list can either be an array or a | separated string
+function checkProps(obj, list) {
+    if (typeof list === "string") {
+        list = list.split("|");
+    }
+    for (prop of list) {
+        let val = obj[prop];
+        if (val === null || val === undefined) {
+            return false;
+        }
+    }
+    return true;
+}
+
 //Function to pass Postman tests 
 function stringifyExample(idValue, nameValue, typeValue, lengthValue, ownerValue, protocolVal, hostVal, baseVal) {
     return '{ "id": "' + idValue + '",\n "name": "' + nameValue + '",\n "type": "' + typeValue + '",\n "length": ' + lengthValue + ',\n "owner": "' + ownerValue + '",\n "self": "' + protocolVal + "://" + hostVal + baseVal + "/" + idValue + '"\n}';
@@ -104,9 +121,16 @@ function get_individual_boat(id){
 }
 
 //Update boat function
-function put_boat(id, name, type, length){
+function put_boat(id, name, type, length, owner){
     const key = datastore.key([BOATS, parseInt(id,10)]);
-    const boat = {"name": name, "type": type, "length": length};
+    const boat = {"name": name, "type": type, "length": length, "owner": owner};
+    return datastore.update({"key":key, "data":boat}).then(() => {return key});
+}
+
+//Update boat function
+function patch_boat(id, name, type, length, owner){
+    const key = datastore.key([BOATS, parseInt(id,10)]);
+    const boat = {"name": name, "type": type, "length": length, "owner": owner};
     return datastore.update({"key":key, "data":boat}).then(() => {return key});
 }
 
@@ -115,7 +139,8 @@ function delete_boat(id){
     return datastore.delete(key);
 } 
 
-//Get cargo from boats 
+//Get cargo from boats
+//Not working 
 function get_boats_cargo(req, id){
     const key = datastore.key([BOATS, parseInt(id,10)]);
     return datastore.get(key)
@@ -157,6 +182,7 @@ function put_cargoCarrier(bid, cid) {
     });
 }
 
+
 /* ------------- End Boat Model Functions ------------- */
 
 /* ------------- Begin Boat Controller Functions ------------- */ 
@@ -191,28 +217,15 @@ router.get('/:boat_id/cargo', function(req, res){
     });
 });  
 
-/* router.post('/', function(req, res){
-    if(req.get('content-type') !== 'application/json'){
-        res.status(406).send('Server only accepts application/json data.')
-    }
-    else { 
-        post_boat(req.body.name, req.body.type, req.body.length, req.body.owner)
-            .then( key => {
-                //res.location(req.protocol + "://" + req.get('host') + req.baseUrl + '/' + key.id);
-                //boat.self = req.protocol + "://" + req.get('host') + req.baseUrl + '/' + key.id;
-                res.status(201).send(stringifyExample(key.id, req.body.name, req.body.type, req.body.length, req.body.owner, req.protocol, req.get("host"), req.baseUrl));
-            });
-    }  
-}); */ 
 router.post('/', checkJwt, function(req, res){
     if(req.get('content-type') !== 'application/json'){
-        res.status(415).send('Server only accepts application/json data.')
+        res.status(406).send('Server only accepts application/json data.')
     }
     else if(!checkJwt) {
         res.status(401).end(); 
     }
     else {
-    console.log(req.user.sub);     
+    //console.log(req.user.sub);     
     post_boat(req.body.name, req.body.type, req.body.length, req.user.sub)
     //req.user.name
     .then( key => {
@@ -222,32 +235,99 @@ router.post('/', checkJwt, function(req, res){
     }  
 });
 
-//Will eventually have to check proper ownership
-router.put('/:boat_id', function(req,res) {
+router.put('/:boat_id', checkJwt, function(req,res) {
+    if(req.get('content-type') !== 'application/json'){
+        res.status(406).send('Server only accepts application/json data.')
+    }
+    else if(!checkJwt){
+        res.status(401).end(); 
+    } else {
     const boat = get_boat_unprotectedID(req.params.boat_id)
     .then( (boat) => {
         if (boat[0] == null) {
             res.status(404).json({"Error": "No boat with this boat_id exists"});
         } else if (req.body.name == null || req.body.type == null || req.body.length == null) {
            res.status(400).send('{"Error": "The request object is missing at least one of the required attributes"}') 
+        } else if (boat[0].owner && boat[0].owner !== req.user.sub) {
+            res.status(403).send('Boat is owned by another person');   
         } else {
-            put_boat(req.params.boat_id, req.body.name, req.body.type, req.body.length)
-            res.status(200).type('json').send(stringifyExample(req.params.boat_id, boat[0].name, boat[0].type, boat[0].length, req.protocol, req.get("host"), req.baseUrl));
+            put_boat(req.params.boat_id, req.body.name, req.body.type, req.body.length, req.user.sub)
+            res.status(200).type('json').send(stringifyExample(req.params.boat_id, boat[0].name, boat[0].type, boat[0].length, req.user.sub, req.protocol, req.get("host"), req.baseUrl));
         }
     });
+    }
 });
 
-//Will eventually have to check proper ownership
-router.delete('/:boat_id', function(req, res){
+router.patch('/:boat_id', checkJwt, function(req,res) {
+    if(req.get('content-type') !== 'application/json'){
+        res.status(406).send('Server only accepts application/json data.')
+    }
+    else if(!checkJwt){
+        res.status(401).end(); 
+    }
+    else if (!checkProps(req.body, "name")) {
+        const boat = get_boat_unprotectedID(req.params.boat_id)
+        .then( (boat) => { 
+            try {
+                patch_boat(req.params.boat_id, boat[0].name, req.body.type, req.body.length, req.user.sub)
+                .then(res.status(200).end()); 
+            } catch {
+                res.status(404).send('Something went wrong with the data').end();
+            }
+        }); 
+    }
+    else if (!checkProps(req.body, "type")) {
+        const boat = get_boat_unprotectedID(req.params.boat_id)
+        .then( (boat) => {
+            try {
+                patch_boat(req.params.boat_id, req.body.name, boat[0].type, req.body.length, req.user.sub)
+                .then(res.status(200).end()); 
+            } catch {
+                res.status(404).send('Something went wrong with the data').end();
+            }
+        }); 
+    }
+    else if (!checkProps(req.body, "length")) {
+        const boat = get_boat_unprotectedID(req.params.boat_id)
+        .then( (boat) => {
+            try {
+                patch_boat(req.params.boat_id, req.body.name, req.body.type, boat[0].length, req.user.sub)
+                .then(res.status(200).end()); 
+            } catch {
+                res.status(404).send('Something went wrong with the data').end();
+            }
+        }); 
+    }
+    else {
+        const boat = get_boat_unprotectedID(req.params.boat_id)
+        .then( (boat) => {
+            try {
+                patch_boat(req.params.boat_id, req.body.name, req.body.type, boat[0].length, req.user.sub)
+                .then(res.status(200).end()); 
+            } catch {
+                res.status(404).send('No boat with this id exsits').end();
+            }
+        });
+    }     
+});
+
+router.delete('/:boat_id', checkJwt, function(req, res){
+    if(!checkJwt) {
+        res.status(401).send('Missing/Invalid Jwt');
+    } else {
     const boat = get_boat_unprotectedID(req.params.boat_id)
 	.then( (boat) => {
         if (boat[0] == null) {
             res.status(404).json({"Error": "No boat with this boat_id exists"});
         }
+        else if (boat[0].owner && boat[0].owner !== req.user.sub) {
+            res.status(403).send('Boat is owned by another person').end();   
+        }
         else {
             delete_boat(req.params.boat_id).then(res.status(204).end());  
         }    
     });
+    }
 });
 
 //Implement this function with putting cargo on the boat 
