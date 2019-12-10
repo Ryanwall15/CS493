@@ -45,6 +45,11 @@ function get_boats(owner) {
         return entities[0].map(ds.fromDatastore).filter( item => item.owner === owner );
     }); 
 }
+
+function get_individual_user(id){
+    const key = datastore.key([USERS, parseInt(id,10)]); 
+    return datastore.get(key); 
+}
 /* ------------- End User Model Functions ------------- */
 
 /* ------------- Begin User Controller Functions ------------- */
@@ -53,6 +58,19 @@ router.get('/', function(req, res){
 	.then( (user) => {
         res.status(200).json(user);
     });
+});
+
+router.get('/:user_id', function(req, res){
+    const user = get_individual_user(req.params.id)
+	.then( (user) => {
+        if (user[0] == null) {
+            res.status(404).json({"Error": "No boat with this boat_id exists"});
+        }
+        else {
+            //res.status(200).type('json').send(stringifyExample1(req.params.boat_id, boat[0].name, boat[0].type, boat[0].length, req.protocol, req.get("host"), req.baseUrl));
+            res.status(200).json(user);  
+        }
+    })
 });
 
 router.get('/:user_id/boats', checkJwt, function(req, res){

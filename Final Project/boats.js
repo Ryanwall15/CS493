@@ -193,7 +193,9 @@ router.get('/', function(req, res){
            boats.items[i].self =  req.protocol + "://" + req.get('host') + req.baseUrl + '/' + boats.items[i].id;  
         } 
         res.status(200).json(boats);
-    });
+        //res.send(boats.items.length); 
+        console.log(boats.items.length);  
+    }); 
 }); 
 
 router.get('/:boat_id', function(req, res) {
@@ -224,6 +226,9 @@ router.post('/', checkJwt, function(req, res){
     else if(!checkJwt) {
         res.status(401).end(); 
     }
+    else if (req.body.name == null || req.body.type == null || req.body.length == null) {
+        res.status(400).send('{"Error": "The request object is missing at least one of the required attributes"}')
+    }
     else {
     //console.log(req.user.sub);     
     post_boat(req.body.name, req.body.type, req.body.length, req.user.sub)
@@ -252,7 +257,7 @@ router.put('/:boat_id', checkJwt, function(req,res) {
             res.status(403).send('Boat is owned by another person');   
         } else {
             put_boat(req.params.boat_id, req.body.name, req.body.type, req.body.length, req.user.sub)
-            res.status(200).type('json').send(stringifyExample(req.params.boat_id, boat[0].name, boat[0].type, boat[0].length, req.user.sub, req.protocol, req.get("host"), req.baseUrl));
+            res.status(200).type('json').send(stringifyExample(req.params.boat_id,  req.body.name, req.body.type, req.body.length, req.user.sub, req.protocol, req.get("host"), req.baseUrl));
         }
     });
     }
@@ -302,7 +307,7 @@ router.patch('/:boat_id', checkJwt, function(req,res) {
         const boat = get_boat_unprotectedID(req.params.boat_id)
         .then( (boat) => {
             try {
-                patch_boat(req.params.boat_id, req.body.name, req.body.type, boat[0].length, req.user.sub)
+                patch_boat(req.params.boat_id, req.body.name, req.body.type, req.body.length, req.user.sub)
                 .then(res.status(200).end()); 
             } catch {
                 res.status(404).send('No boat with this id exsits').end();

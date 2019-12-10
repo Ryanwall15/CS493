@@ -133,7 +133,7 @@ router.put('/:cargo_id', function(req,res) {
            res.status(400).send('{"Error": "The request object is missing at least one of the required attributes"}') 
         } else {
             put_cargo(req.params.cargo_id, req.body.weight, req.body.content, req.body.expected_delivery, cargo[0].carrier)
-            res.status(200).type('json').send(stringifyExample1(req.params.cargo_id, cargo[0].weight, cargo[0].content, cargo[0].expected_delivery, req.protocol, req.get("host"), req.baseUrl));
+            res.status(200).type('json').send(stringifyExample1(req.params.cargo_id, req.body.weight, req.body.content, req.body.expected_delivery, req.protocol, req.get("host"), req.baseUrl));
         }
     });
     }
